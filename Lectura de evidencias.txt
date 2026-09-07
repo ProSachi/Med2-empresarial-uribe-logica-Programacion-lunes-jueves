@@ -1,0 +1,9 @@
+Las evidencias se encuentran documentadas en el siguiente link
+
+https://github.com/ProSachi/Med-S1--viernes-900-nuevas-tecnolog-as-204
+
+Allí se encuentra:
+
+Guías: Son los documentos que el docente utilizó en clase para entregarle al estudiante documentos con la teoría, ejemplos, demostraciones, y ejercicios propuestos para que es estudiante aprenda, asimile y replique lo realizado en clase.
+
+Ejercicios: Son las prácticas en código que se realizaron y son base para el estudiante, haga practicas y/o replique lo visto en clase, además es el punto de partida para el desarrollo de los proyectos integradores solicitados en los 3 momentos.
