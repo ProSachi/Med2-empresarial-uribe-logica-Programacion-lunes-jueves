@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MotoMarket | Venta de Motos</title>
+  <meta name="description" content="Encuentra la moto ideal para ciudad, aventura o trabajo al mejor precio.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <nav class="nav">
+      <h1 class="logo">Moto<span>Market</span></h1>
+      <a href="#catalogo" class="btn btn-small">Ver catálogo</a>
+    </nav>
+    <section class="hero-content">
+      <p class="tag">Tu próxima moto te está esperando</p>
+      <h2>Compra motos nuevas y seminuevas con garantía</h2>
+      <p>Financiación, entrega rápida y asesoría personalizada para que ruedes hoy mismo.</p>
+      <a href="#contacto" class="btn">Cotizar ahora</a>
+    </section>
+  </header>
+
+  <main>
+    <section class="benefits">
+      <article>
+        <h3>Financiación flexible</h3>
+        <p>Paga en cuotas cómodas y ajustadas a tu presupuesto.</p>
+      </article>
+      <article>
+        <h3>Garantía incluida</h3>
+        <p>Compra con respaldo y soporte técnico postventa.</p>
+      </article>
+      <article>
+        <h3>Entrega inmediata</h3>
+        <p>Tenemos inventario listo para entrega en tiempo récord.</p>
+      </article>
+    </section>
+
+    <section id="catalogo" class="catalog">
+      <div class="section-title">
+        <h2>Catálogo de motos</h2>
+        <p>Filtra por categoría y encuentra la ideal para ti.</p>
+      </div>
+
+      <div class="filters">
+        <button class="filter-btn active" data-filter="todas">Todas</button>
+        <button class="filter-btn" data-filter="deportiva">Deportivas</button>
+        <button class="filter-btn" data-filter="urbana">Urbanas</button>
+        <button class="filter-btn" data-filter="adventure">Adventure</button>
+      </div>
+
+      <div class="cards">
+        <article class="card" data-category="deportiva">
+          <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80" alt="Moto deportiva roja">
+          <div class="card-body">
+            <h3>Raptor 300R</h3>
+            <p>Motor 300cc, 6 velocidades, ideal para alto rendimiento.</p>
+            <strong>$18.900.000 COP</strong>
+          </div>
+        </article>
+
+        <article class="card" data-category="urbana">
+          <img src="https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&w=900&q=80" alt="Moto urbana negra">
+          <div class="card-body">
+            <h3>CityGo 160</h3>
+            <p>Ágil, económica y perfecta para moverte por la ciudad.</p>
+            <strong>$10.500.000 COP</strong>
+          </div>
+        </article>
+
+        <article class="card" data-category="adventure">
+          <img src="https://images.unsplash.com/photo-1524592714635-d77511a4834b?auto=format&fit=crop&w=900&q=80" alt="Moto adventure en carretera">
+          <div class="card-body">
+            <h3>TrailX 400</h3>
+            <p>Suspensión reforzada y autonomía amplia para viaje.</p>
+            <strong>$22.300.000 COP</strong>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="contacto" class="contact">
+      <div class="section-title">
+        <h2>Solicita tu cotización</h2>
+        <p>Déjanos tus datos y te contactamos en minutos.</p>
+      </div>
+
+      <form id="quoteForm" class="form">
+        <label for="name">Nombre completo</label>
+        <input id="name" name="name" type="text" placeholder="Ej: Juan Pérez" required>
+
+        <label for="phone">Teléfono</label>
+        <input id="phone" name="phone" type="tel" placeholder="Ej: 3001234567" required>
+
+        <label for="model">Modelo de interés</label>
+        <select id="model" name="model" required>
+          <option value="">Selecciona un modelo</option>
+          <option value="Raptor 300R">Raptor 300R</option>
+          <option value="CityGo 160">CityGo 160</option>
+          <option value="TrailX 400">TrailX 400</option>
+        </select>
+
+        <label for="message">Mensaje</label>
+        <textarea id="message" name="message" rows="4" placeholder="Cuéntanos qué buscas"></textarea>
+
+        <button type="submit" class="btn">Enviar solicitud</button>
+      </form>
+      <p id="formMessage" class="form-message" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 MotoMarket. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
