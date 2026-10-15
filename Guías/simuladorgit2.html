@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Workflow: Aislamiento Estricto</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: #f4f6f8; color: #333; padding: 20px; margin: 0; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); justify-content: center; align-items: center; margin-bottom: 20px; }
+        .group { display: flex; gap: 5px; border-right: 2px solid #e1e4e8; padding-right: 15px; align-items: center; }
+        .group:last-child { border-right: none; }
+        button { background-color: #24292e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        button:hover { background-color: #0366d6; }
+        button.action-btn { background-color: #2ea44f; }
+        button.action-btn:hover { background-color: #22863a; }
+        button.danger-btn { background-color: #d73a49; }
+        button.update-btn { background-color: #6f42c1; }
+        input, select { padding: 8px; border: 1px solid #d1d5da; border-radius: 6px; outline: none; font-size: 13px; }
+        .status-bar { text-align: center; padding: 12px; background: #e1edf8; border: 1px solid #c8e1ff; border-radius: 6px; color: #0366d6; font-size: 16px; margin-bottom: 20px; font-weight: 500; }
+        .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .column { background: #e1e4e8; border-radius: 8px; padding: 15px; min-height: 550px; display: flex; flex-direction: column; gap: 10px; }
+        .column h2 { font-size: 15px; text-align: center; border-bottom: 2px solid #d1d5da; padding-bottom: 10px; margin-top: 0; color: #24292e; }
+        .column h3 { font-size: 12px; text-align: center; color: #586069; margin-top: -5px; margin-bottom: 15px; font-weight: normal; }
+        .card { background: white; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #d73a49; position: relative; animation: fadeIn 0.3s ease-out; }
+        .card.staged { border-left-color: #f66a0a; }
+        .card.commit { border-left-color: #2ea44f; }
+        .hash { font-family: monospace; font-size: 11px; color: #586069; margin-top: 5px; background: #f6f8fa; padding: 4px; border-radius: 4px; display: inline-block;}
+        .file-list { font-size: 12px; margin-top: 8px; color: #444; }
+        .badge { background: #ffd33d; color: #24292e; font-size: 10px; padding: 3px 8px; border-radius: 12px; position: absolute; top: 10px; right: 10px; font-weight: bold; text-transform: uppercase; }
+        .main-badge { background: #c8e1ff; color: #0366d6; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Simulador Git: Aislamiento Local y Remoto</h1>
+    </div>
+    
+    <div class="toolbar">
+        <div class="group">
+            <button onclick="createFile()">1. Crear Archivo</button>
+            <button onclick="gitAdd()">2. git add</button>
+            <button onclick="gitCommit()">3. git commit</button>
+        </div>
+        <div class="group">
+            <input type="text" id="branchInput" placeholder="Nueva rama">
+            <button class="action-btn" onclick="gitBranch()">git switch -c</button>
+        </div>
+        <div class="group">
+            <select id="branchSelector" onchange="gitSwitch()"></select>
+            <button class="action-btn" onclick="gitSwitchBtn()">Moverse</button>
+        </div>
+        <div class="group">
+            <button class="danger-btn" onclick="gitMerge()">Merge a main</button>
+            <button class="update-btn" onclick="gitUpdateFromMain()">Traer de main</button>
+        </div>
+        <div class="group">
+            <button onclick="gitPush()">git push</button>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        El puntero <b>HEAD</b> se encuentra en la rama: <b id="currentBranchName" style="color: #d73a49; font-size: 18px; text-transform: uppercase;">main</b>
+    </div>
+
+    <div class="board">
+        <div class="column" id="wd"></div>
+        <div class="column" id="sa"></div>
+        <div class="column" id="lr"></div>
+        <div class="column" id="rr"></div>
+    </div>
+
+    <script>
+        let state = { 
+            head: 'main', 
+            branches: { 'main': { wd: [], sa: [], commits: [] } }, 
+            remote: { 'main': [] }, 
+            counter: 1 
+        };
+        
+        const getHash = () => Math.random().toString(16).substr(2, 7);
+
+        function render() {
+            const currentBranch = state.branches[state.head];
+            const currentRemote = state.remote[state.head] || [];
+            
+            document.getElementById('currentBranchName').innerText = state.head;
+            
+            const selector = document.getElementById('branchSelector');
+            selector.innerHTML = Object.keys(state.branches).map(b => 
+                `<option value="${b}" ${b === state.head ? 'selected' : ''}>${b}</option>`
+            ).join('');
+
+            const buildCard = (title, hashText, type, extra = '', files = '') => 
+                `<div class="card ${type}">
+                    ${extra}
+                    <div style="font-weight: bold; margin-bottom: 5px;">${title}</div>
+                    <div class="hash">${hashText}</div>
+                    ${files ? `<div class="file-list">📄 ${files}</div>` : ''}
+                </div>`;
+
+            document.getElementById('wd').innerHTML = '<h2>Working Directory</h2><h3>(Archivos físicos actuales)</h3>' + 
+                currentBranch.wd.map(f => buildCard(f, 'Untracked / Modified', '')).join('');
+            
+            document.getElementById('sa').innerHTML = '<h2>Staging Area</h2><h3>(Index)</h3>' + 
+                currentBranch.sa.map(f => buildCard(f, 'Staged', 'staged')).join('');
+            
+            const commitRenderer = c => {
+                let badge = `<span class="badge ${c.branch === 'main' ? 'main-badge' : ''}">${c.branch}</span>`;
+                return buildCard(`Commit`, `SHA: ${c.hash}`, 'commit', badge, c.files.join(', '));
+            };
+
+            document.getElementById('lr').innerHTML = `<h2>Local Repository</h2><h3>(Historial de ${state.head})</h3>` + 
+                currentBranch.commits.map(commitRenderer).join('');
+            
+            // SEGREGRACIÓN REMOTA: Muestra solo los commits remotos de la rama activa
+            document.getElementById('rr').innerHTML = `<h2>Remote Repository</h2><h3>(origin/${state.head})</h3>` + 
+                currentRemote.map(commitRenderer).join('');
+        }
+
+        function createFile() { 
+            state.branches[state.head].wd.push(`modulo_${state.counter++}.js`); 
+            render(); 
+        }
+
+        function gitAdd() { 
+            const branch = state.branches[state.head];
+            if(branch.wd.length > 0) { 
+                branch.sa.push(...branch.wd); 
+                branch.wd = []; 
+                render(); 
+            } 
+        }
+        
+        function gitCommit() {
+            const branch = state.branches[state.head];
+            if (branch.sa.length === 0) return alert("El Staging Area está vacío.");
+            
+            branch.commits.push({ hash: getHash(), files: [...branch.sa], branch: state.head });
+            branch.sa = [];
+            render();
+        }
+
+        function gitPush() {
+            const branch = state.branches[state.head];
+            if(branch.commits.length === 0) return alert("No hay commits locales para enviar.");
+            
+            if(!state.remote[state.head]) state.remote[state.head] = [];
+            
+            branch.commits.forEach(localCommit => {
+                const exists = state.remote[state.head].find(rc => rc.hash === localCommit.hash);
+                if (!exists) {
+                    state.remote[state.head].push(JSON.parse(JSON.stringify(localCommit)));
+                }
+            });
+            render();
+        }
+
+        function gitBranch() {
+            const bName = document.getElementById('branchInput').value.trim().replace(/\s+/g, '-');
+            if (!bName || state.branches[bName]) return alert("Nombre inválido o la rama ya existe.");
+            
+            state.branches[bName] = { 
+                wd: [], 
+                sa: [], 
+                commits: JSON.parse(JSON.stringify(state.branches[state.head].commits)) 
+            };
+            
+            // El remoto no se crea hasta que se hace el primer push
+            state.remote[bName] = []; 
+            
+            state.head = bName;
+            document.getElementById('branchInput').value = '';
+            render();
+        }
+
+        function gitSwitchBtn() {
+            const selected = document.getElementById('branchSelector').value;
+            if(selected && selected !== state.head) {
+                state.head = selected;
+                render();
+            }
+        }
+        function gitSwitch() { gitSwitchBtn(); }
+
+        function gitMerge() {
+            if (state.head === 'main') return alert("Posiciónate en otra rama para integrarla a main.");
+            const featureBranchName = state.head;
+            const mainBranch = state.branches['main'];
+            const featureBranch = state.branches[featureBranchName];
+            
+            const commitsToMerge = featureBranch.commits.filter(
+                fc => !mainBranch.commits.find(mc => mc.hash === fc.hash)
+            );
+            
+            if(commitsToMerge.length === 0) return alert("No hay commits nuevos para fusionar.");
+
+            mainBranch.commits.push(...JSON.parse(JSON.stringify(commitsToMerge)));
+            mainBranch.commits.push({ hash: getHash(), files: [`Merge de ${featureBranchName}`], branch: 'main' });
+            
+            state.head = 'main';
+            render();
+        }
+
+        function gitUpdateFromMain() {
+            if (state.head === 'main') return alert("Ya estás en main.");
+            const currentBranch = state.branches[state.head];
+            const mainBranch = state.branches['main'];
+            
+            const newMainCommits = mainBranch.commits.filter(
+                mc => !currentBranch.commits.find(cc => cc.hash === mc.hash)
+            );
+            
+            if(newMainCommits.length === 0) return alert("Tu rama ya está al día con main.");
+
+            currentBranch.commits.push(...JSON.parse(JSON.stringify(newMainCommits)));
+            currentBranch.commits.push({ hash: getHash(), files: [`Actualización desde main`], branch: state.head });
+            
+            render();
+        }
+
+        render();
+    </script>
+</body>
+</html>

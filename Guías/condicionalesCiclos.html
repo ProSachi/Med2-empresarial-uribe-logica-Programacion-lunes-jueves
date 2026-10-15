@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloques de Flujo · Sin código</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#14161C;
+    --panel:#1C1F28;
+    --panel-2:#20232E;
+    --divider:#2B2F3B;
+    --text:#EDEAE2;
+    --muted:#8B90A0;
+    --amber:#F5A623;
+    --amber-dim:#4A3418;
+    --green:#5FD68B;
+    --green-dim:#16342A;
+    --coral:#FF6B6B;
+    --coral-dim:#3A1E22;
+
+    --brick-start:#F4D35E;
+    --brick-action:#5B9BD5;
+    --brick-decision:#F0A93E;
+    --dark-ink:#14161C;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: radial-gradient(1200px 600px at 12% -10%, #1b1e29 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family:'Inter', sans-serif;
+    padding: 26px 18px 60px;
+  }
+  .app{ max-width: 1180px; margin:0 auto; }
+
+  .eyebrow{ font-family:'Inter',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--amber); margin:0 0 6px; }
+  h1{ font-family:'Space Grotesk',sans-serif; font-size:clamp(21px,3.2vw,30px); margin:0 0 8px; letter-spacing:-0.01em; }
+  .lede{ color:var(--muted); max-width:640px; font-size:14.5px; line-height:1.55; margin:0; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:16px; margin-top:16px; font-size:12px; color:var(--muted); }
+  .legend span{ display:inline-flex; align-items:center; gap:7px; }
+  .lg-shape{ width:16px; height:16px; border-radius:4px; display:inline-block; flex-shrink:0; }
+  .lg-pill{ border-radius:9px; background:var(--brick-start); }
+  .lg-block{ background:var(--brick-action); }
+  .lg-diamond{ background:var(--brick-decision); transform:rotate(45deg); width:12px; height:12px; }
+  .lg-dot{ width:9px; height:9px; border-radius:50%; }
+  .lg-active{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .lg-visited{ background:var(--green); }
+
+  nav.tabs{ display:flex; flex-wrap:wrap; gap:8px; margin:26px 0 6px; border-bottom:1px solid var(--divider); padding-bottom:12px; }
+  .tab-btn{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px; background:transparent; color:var(--muted); border:1px solid var(--divider); padding:8px 14px; border-radius:8px; cursor:pointer; transition:all .15s ease; }
+  .tab-btn:hover{ color:var(--text); border-color:#3a3f4e; }
+  .tab-btn.active{ color:#14161C; background:var(--amber); border-color:var(--amber); }
+
+  .tab-subtitle{ font-size:13px; color:var(--text); background:var(--panel); border:1px solid var(--divider); border-radius:10px; padding:10px 14px; margin:12px 0 18px; }
+  .tab-subtitle b{ color:var(--amber); }
+
+  .workspace{ display:grid; grid-template-columns:1.3fr 1fr; gap:18px; align-items:start; }
+
+  .diagram-panel{ background:var(--panel); border:1px solid var(--divider); border-radius:12px; padding:8px; }
+  .diagram-panel svg{ width:100%; height:auto; display:block; }
+
+  /* --- nodos --- */
+  .node .shape{ stroke:var(--divider); stroke-width:2.5; transition:all .25s ease; }
+  .node.pill .shape{ fill:var(--brick-start); }
+  .node.block .shape{ fill:var(--brick-action); }
+  .node.diamond .shape{ fill:var(--brick-decision); }
+  .node .stud{ fill:rgba(0,0,0,0.18); }
+  .node .label{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; text-anchor:middle; fill:var(--dark-ink); pointer-events:none; }
+  .node.block .label{ fill:#0d1622; }
+  .node.diamond .label{ font-size:12.5px; }
+
+  .node.active .shape{ stroke:var(--amber); stroke-width:4; filter:drop-shadow(0 0 10px var(--amber)); }
+  .node.visited .shape{ stroke:var(--green); stroke-width:3; }
+
+  /* --- aristas --- */
+  .edge{ fill:none; stroke:#3a3f4e; stroke-width:2.5; }
+  .edge.visited{ stroke:var(--green); }
+  .edge.active{ stroke:var(--amber); stroke-width:3.2; stroke-dasharray:7 5; animation:dash .6s linear infinite; }
+  @keyframes dash{ to{ stroke-dashoffset:-24; } }
+  .edge-label{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; fill:var(--muted); text-anchor:middle; }
+  .edge-label.active{ fill:var(--amber); }
+
+  .token{ fill:var(--amber); stroke:#14161C; stroke-width:3; filter:drop-shadow(0 0 8px var(--amber)); transition:cx .6s ease, cy .6s ease; }
+
+  /* --- panel lateral --- */
+  .side-panel{ display:flex; flex-direction:column; gap:14px; }
+  .card{ background:var(--panel); border:1px solid var(--divider); border-radius:12px; padding:16px 18px; }
+  .card h3{ font-family:'Space Grotesk',sans-serif; font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 12px; }
+
+  .controls-card .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .controls-card .row + .row{ margin-top:10px; }
+  .control-label{ font-size:13.5px; color:var(--text); }
+
+  .toggle-group{ display:flex; gap:6px; }
+  .toggle-btn{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; padding:7px 16px; border-radius:8px; border:1px solid var(--divider); background:var(--panel-2); color:var(--muted); cursor:pointer; }
+  .toggle-btn.sel-true.active{ background:var(--green-dim); color:var(--green); border-color:var(--green); }
+  .toggle-btn.sel-false.active{ background:var(--coral-dim); color:var(--coral); border-color:var(--coral); }
+
+  .stepper{ display:flex; align-items:center; gap:10px; }
+  .stepper button{ width:30px; height:30px; border-radius:8px; border:1px solid var(--divider); background:var(--panel-2); color:var(--text); font-size:16px; cursor:pointer; line-height:1; }
+  .stepper button:hover{ border-color:var(--amber); color:var(--amber); }
+  .stepper .val{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; min-width:28px; text-align:center; }
+
+  table#varsTable{ width:100%; border-collapse:collapse; font-family:'Space Grotesk',sans-serif; font-size:13.5px; }
+  table#varsTable th{ text-align:left; color:var(--muted); font-weight:500; font-size:11px; text-transform:uppercase; padding-bottom:8px; border-bottom:1px solid var(--divider); }
+  table#varsTable td{ padding:8px 0; border-bottom:1px solid var(--divider); }
+  table#varsTable tr:last-child td{ border-bottom:none; }
+  table#varsTable tr.changed td{ animation:flashCell 1s ease; }
+  @keyframes flashCell{ 0%{ background-color:rgba(245,166,35,.35); } 100%{ background-color:transparent; } }
+
+  #condCard .q{ font-family:'Space Grotesk',sans-serif; font-size:14.5px; color:var(--text); text-align:center; padding:2px 0; }
+  #condCard .detail{ font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--muted); text-align:center; padding:4px 0; }
+  #condCard .arrow{ text-align:center; color:var(--muted); font-size:14px; }
+  #condCard .result{ text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; letter-spacing:.04em; padding:6px 0 2px; }
+  #condCard .result.true{ color:var(--green); }
+  #condCard .result.false{ color:var(--coral); }
+
+  #narrative{ font-size:14px; line-height:1.6; color:var(--text); margin:0; min-height:60px; }
+
+  footer.controls{ margin-top:20px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--divider); border-radius:12px; padding:14px 16px; }
+  footer.controls button{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; background:var(--panel-2); color:var(--text); border:1px solid var(--divider); padding:9px 14px; border-radius:8px; cursor:pointer; transition:all .15s ease; }
+  footer.controls button:hover:not(:disabled){ border-color:var(--amber); color:var(--amber); }
+  footer.controls button:disabled{ opacity:.35; cursor:not-allowed; }
+  #playBtn{ background:var(--amber); color:#14161C; border-color:var(--amber); }
+  #playBtn:hover{ color:#14161C !important; }
+  .step-counter{ font-family:'Space Grotesk',sans-serif; font-size:12.5px; color:var(--muted); margin-left:4px; }
+  .scrubber{ display:flex; flex-wrap:wrap; gap:5px; margin-left:auto; max-width:100%; }
+  .scrubber .dot{ width:9px; height:9px; border-radius:50%; background:var(--divider); border:none; cursor:pointer; padding:0; transition:all .15s ease; }
+  .scrubber .dot:hover{ background:#4a4f5e; }
+  .scrubber .dot.active{ background:var(--amber); box-shadow:0 0 6px var(--amber); transform:scale(1.3); }
+
+  @media (max-width:820px){
+    .workspace{ grid-template-columns:1fr; }
+    footer.controls{ justify-content:flex-start; }
+    .scrubber{ margin-left:0; order:5; width:100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <p class="eyebrow">Piezas de decisión y repetición</p>
+    <h1>Flujo de Control con Bloques (sin código)</h1>
+    <p class="lede">Cada figura es una pieza con un solo trabajo: la <b>píldora</b> abre o cierra el proceso, el <b>rombo</b> hace una pregunta de SÍ/NO, y el <b>bloque</b> hace una acción. Mueve las piezas de control y observa por dónde camina el proceso.</p>
+    <div class="legend">
+      <span><i class="lg-shape lg-pill"></i> Inicio / Fin</span>
+      <span><i class="lg-shape lg-diamond"></i> Pregunta (SÍ / NO)</span>
+      <span><i class="lg-shape lg-block"></i> Acción</span>
+      <span><i class="lg-shape lg-dot lg-active"></i> paso actual</span>
+      <span><i class="lg-shape lg-dot lg-visited"></i> ya recorrido</span>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+  <div class="tab-subtitle" id="subtitle"></div>
+
+  <main class="workspace">
+    <section class="diagram-panel" id="diagramPanel"></section>
+
+    <aside class="side-panel">
+      <div class="card controls-card" id="controlsCard">
+        <h3>Ajusta la situación</h3>
+        <div id="controlsBody"></div>
+      </div>
+      <div class="card">
+        <h3>Estado actual</h3>
+        <table id="varsTable"></table>
+      </div>
+      <div class="card" id="condCard" hidden>
+        <h3>Evaluando la pregunta</h3>
+        <div id="condContent"></div>
+      </div>
+      <div class="card">
+        <h3>¿Qué está pasando aquí?</h3>
+        <p id="narrative"></p>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="controls">
+    <button id="resetBtn">⟲ Reiniciar</button>
+    <button id="prevBtn">← Anterior</button>
+    <button id="playBtn">▶ Reproducir</button>
+    <button id="nextBtn">Siguiente →</button>
+    <span class="step-counter" id="stepCounter"></span>
+    <div class="scrubber" id="scrubber"></div>
+  </footer>
+
+</div>
+
+<script>
+/* ================= Helpers de dibujo SVG ================= */
+function studsRow(x0, y0, w){
+  const count = Math.max(3, Math.round(w/50));
+  const margin = w*0.12;
+  const usable = w - margin*2;
+  let out = '';
+  for(let i=0;i<count;i++){
+    const cx = x0 + margin + (usable*(i/(count-1||1)));
+    out += `<circle class="stud" cx="${cx.toFixed(1)}" cy="${(y0+9).toFixed(1)}" r="5.5"/>`;
+  }
+  return out;
+}
+
+function nodeSVG(n){
+  if(n.type==='pill'){
+    const x=n.cx-n.w/2, y=n.cy-n.h/2;
+    return `<g id="${n.id}" class="node pill">
+      <rect class="shape" x="${x}" y="${y}" width="${n.w}" height="${n.h}" rx="${n.h/2}"/>
+      ${studsRow(x,y,n.w)}
+      <text class="label" x="${n.cx}" y="${n.cy+5}">${n.label}</text>
+    </g>`;
+  }
+  if(n.type==='block'){
+    const x=n.cx-n.w/2, y=n.cy-n.h/2;
+    return `<g id="${n.id}" class="node block">
+      <rect class="shape" x="${x}" y="${y}" width="${n.w}" height="${n.h}" rx="14"/>
+      ${studsRow(x,y,n.w)}
+      <text class="label" x="${n.cx}" y="${n.cy+5}">${n.label}</text>
+    </g>`;
+  }
+  if(n.type==='diamond'){
+    const pts = `${n.cx},${n.cy-n.hh} ${n.cx+n.hw},${n.cy} ${n.cx},${n.cy+n.hh} ${n.cx-n.hw},${n.cy}`;
+    return `<g id="${n.id}" class="node diamond">
+      <polygon class="shape" points="${pts}"/>
+      <text class="label" x="${n.cx}" y="${n.cy+4}">${n.label}</text>
+    </g>`;
+  }
+  return '';
+}
+
+function edgeSVG(e){
+  let label = '';
+  if(e.label){
+    label = `<text id="${e.id}-label" class="edge-label" x="${e.lx}" y="${e.ly}">${e.label}</text>`;
+  }
+  return `<path id="${e.id}" class="edge" d="${e.d}" marker-end="url(#arrow)"/>${label}`;
+}
+
+function buildSVG(viewBox, nodes, edges){
+  const defs = `<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5b5f6e"/></marker></defs>`;
+  const edgesSvg = edges.map(edgeSVG).join('');
+  const nodesSvg = nodes.map(nodeSVG).join('');
+  const start = nodes[0];
+  const token = `<circle id="token" class="token" r="11" cx="${start.cx}" cy="${start.cy}"/>`;
+  return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">${defs}${edgesSvg}${nodesSvg}${token}</svg>`;
+}
+
+/* ================= Definición de las 5 pistas ================= */
+
+const TABS = [
+  /* ---------- 1. SI simple ---------- */
+  {
+    id:'si', label:'SI (decisión simple)',
+    subtitleText:'Analogía: <b>una sola puerta con un guardia.</b> Según la respuesta, la persona toma un único camino — nunca los dos.',
+    viewBox:'0 0 500 400',
+    nodes:[
+      {id:'start', type:'pill', cx:250, cy:40, w:220, h:56, label:'Llega una persona'},
+      {id:'D1', type:'diamond', cx:250, cy:150, hw:115, hh:55, label:'¿Tiene entrada?'},
+      {id:'A1', type:'block', cx:390, cy:260, w:190, h:64, label:'Entra a la sala'},
+      {id:'A2', type:'block', cx:110, cy:260, w:190, h:64, label:'Se queda afuera'},
+      {id:'end', type:'pill', cx:250, cy:360, w:220, h:56, label:'Continúa el día'}
+    ],
+    edges:[
+      {id:'e-start-D1', d:'M250,68 L250,95'},
+      {id:'e-D1-A1', d:'M340,180 L390,228', label:'SÍ', lx:388, ly:202},
+      {id:'e-D1-A2', d:'M160,180 L110,228', label:'NO', lx:112, ly:202},
+      {id:'e-A1-end', d:'M370,292 L280,332'},
+      {id:'e-A2-end', d:'M130,292 L220,332'}
+    ],
+    controlType:'toggle',
+    controlLabel:'¿Tiene entrada?',
+    defaultValue:true,
+    generateTrace(v){
+      const si = v===true;
+      const steps = [
+        {node:'start', edge:null, vars:{'Respuesta': si?'SÍ':'NO'}, desc:'Una persona llega al lugar y se acerca a la puerta.'},
+        {node:'D1', edge:'e-start-D1', cond:{q:'¿Tiene entrada?', result:si}, vars:{'Respuesta': si?'SÍ':'NO'}, desc:'Se hace la pregunta. La respuesta configurada es '+(si?'SÍ':'NO')+'.'}
+      ];
+      if(si){
+        steps.push({node:'A1', edge:'e-D1-A1', vars:{'Respuesta':'SÍ'}, desc:'Como la respuesta fue SÍ, se sigue el camino de la derecha. El camino de la izquierda ni se toca.'});
+        steps.push({node:'end', edge:'e-A1-end', vars:{'Respuesta':'SÍ'}, desc:'Ambos caminos posibles terminan en el mismo punto, pero solo se recorrió uno de los dos.'});
+      } else {
+        steps.push({node:'A2', edge:'e-D1-A2', vars:{'Respuesta':'NO'}, desc:'Como la respuesta fue NO, se sigue el camino de la izquierda. El camino de la derecha ni se toca.'});
+        steps.push({node:'end', edge:'e-A2-end', vars:{'Respuesta':'NO'}, desc:'Ambos caminos posibles terminan en el mismo punto, pero solo se recorrió uno de los dos.'});
+      }
+      return steps;
+    }
+  },
+
+  /* ---------- 2. SI / SINO SI / SINO ---------- */
+  {
+    id:'sisino', label:'SI / SINO SI / SINO',
+    subtitleText:'Analogía: <b>una fila de guardias, uno detrás de otro.</b> Apenas uno dice SÍ, la persona se va por ahí y ningún guardia siguiente pregunta nada.',
+    viewBox:'0 0 520 560',
+    nodes:[
+      {id:'start', type:'pill', cx:240, cy:40, w:220, h:56, label:'Llega una persona'},
+      {id:'D1', type:'diamond', cx:240, cy:150, hw:115, hh:50, label:'¿Edad < 12?'},
+      {id:'A1', type:'block', cx:435, cy:150, w:150, h:60, label:'Carril NIÑO'},
+      {id:'D2', type:'diamond', cx:240, cy:270, hw:115, hh:50, label:'¿Edad < 18?'},
+      {id:'A2', type:'block', cx:435, cy:270, w:150, h:60, label:'Carril JOVEN'},
+      {id:'A3', type:'block', cx:240, cy:390, w:180, h:60, label:'Carril ADULTO'},
+      {id:'end', type:'pill', cx:240, cy:500, w:220, h:56, label:'Descuento calculado'}
+    ],
+    edges:[
+      {id:'e-start-D1', d:'M240,68 L240,100'},
+      {id:'e-D1-A1', d:'M355,150 L360,150', label:'SÍ', lx:400, ly:135},
+      {id:'e-D1-D2', d:'M240,200 L240,220', label:'NO', lx:262, ly:212},
+      {id:'e-D2-A2', d:'M355,270 L360,270', label:'SÍ', lx:400, ly:255},
+      {id:'e-D2-A3', d:'M240,320 L240,360', label:'NO', lx:262, ly:340},
+      {id:'e-A1-end', d:'M435,180 C 435,440 240,440 240,472'},
+      {id:'e-A2-end', d:'M435,300 C 435,440 240,440 240,472'},
+      {id:'e-A3-end', d:'M240,420 L240,472'}
+    ],
+    controlType:'stepper',
+    controlLabel:'Edad de la persona',
+    min:0, max:90, step:1, defaultValue:15,
+    generateTrace(edad){
+      const steps = [{node:'start', edge:null, vars:{Edad:edad}, desc:'Una persona de '+edad+' años llega a la fila de guardias.'}];
+      const c1 = edad<12;
+      steps.push({node:'D1', edge:'e-start-D1', cond:{q:'¿Edad < 12?', result:c1, detail: edad+' < 12'}, vars:{Edad:edad}, desc:'El primer guardia pregunta si '+edad+' < 12. Resultado: '+(c1?'VERDADERO':'FALSO')+'.'});
+      if(c1){
+        steps.push({node:'A1', edge:'e-D1-A1', vars:{Edad:edad}, desc:'Como fue verdadero, entra al carril NIÑO. Los guardias siguientes ni preguntan.'});
+        steps.push({node:'end', edge:'e-A1-end', vars:{Edad:edad}, desc:'Llega a la meta común.'});
+      } else {
+        steps.push({node:'D2', edge:'e-D1-D2', cond:{q:'¿Edad < 18?', result: edad<18, detail: edad+' < 18'}, vars:{Edad:edad}, desc:'Como el primero fue falso, pasa al segundo guardia, que pregunta si '+edad+' < 18. Resultado: '+(edad<18?'VERDADERO':'FALSO')+'.'});
+        if(edad<18){
+          steps.push({node:'A2', edge:'e-D2-A2', vars:{Edad:edad}, desc:'Como fue verdadero, entra al carril JOVEN.'});
+          steps.push({node:'end', edge:'e-A2-end', vars:{Edad:edad}, desc:'Llega a la meta común.'});
+        } else {
+          steps.push({node:'A3', edge:'e-D2-A3', vars:{Edad:edad}, desc:'Como ninguna de las preguntas anteriores fue verdadera, entra automáticamente al carril ADULTO: el último guardia no necesita pregunta propia.'});
+          steps.push({node:'end', edge:'e-A3-end', vars:{Edad:edad}, desc:'Llega a la meta común.'});
+        }
+      }
+      return steps;
+    }
+  },
+
+  /* ---------- 3. PARA (for) ---------- */
+  {
+    id:'para', label:'PARA (vueltas contadas)',
+    subtitleText:'Usa PARA cuando <b>sabes desde el inicio</b> cuántas vueltas se van a correr — el contador y el total ya están definidos antes de arrancar.',
+    viewBox:'0 0 500 500',
+    nodes:[
+      {id:'start', type:'pill', cx:250, cy:40, w:240, h:56, label:'Prepara el contador'},
+      {id:'D', type:'diamond', cx:250, cy:150, hw:125, hh:55, label:'¿Contador ≤ Total?'},
+      {id:'A', type:'block', cx:250, cy:260, w:220, h:60, label:'Corre una vuelta'},
+      {id:'INC', type:'block', cx:250, cy:350, w:220, h:56, label:'Contador + 1'},
+      {id:'end', type:'pill', cx:250, cy:460, w:240, h:56, label:'Carrera terminada'}
+    ],
+    edges:[
+      {id:'e-start-D', d:'M250,68 L250,95'},
+      {id:'e-D-A', d:'M250,205 L250,230', label:'SÍ', lx:278, ly:218},
+      {id:'e-A-INC', d:'M250,290 L250,322'},
+      {id:'e-INC-D', d:'M360,350 C 460,350 460,150 375,150', label:'repite', lx:432, ly:250},
+      {id:'e-D-end', d:'M125,150 C 30,150 30,460 130,460', label:'NO', lx:55, ly:300}
+    ],
+    controlType:'stepper',
+    controlLabel:'Total de vueltas a correr',
+    min:1, max:6, step:1, defaultValue:4,
+    generateTrace(total){
+      const steps = [{node:'start', edge:null, vars:{Contador:1, Total:total}, desc:'Se prepara el contador en 1. Ya sabemos que serán '+total+' vueltas en total, antes de arrancar.'}];
+      let counter=1, first=true;
+      while(true){
+        const cond = counter<=total;
+        steps.push({node:'D', edge: first?'e-start-D':'e-INC-D', cond:{q:'¿Contador ≤ Total?', result:cond, detail:counter+' ≤ '+total}, vars:{Contador:counter, Total:total}, desc:'Se pregunta si '+counter+' ≤ '+total+'. Resultado: '+(cond?'VERDADERO':'FALSO')+'.'});
+        first=false;
+        if(!cond){
+          steps.push({node:'end', edge:'e-D-end', vars:{Contador:counter, Total:total}, desc:'Como la pregunta ya dio falso, el ciclo termina aquí.'});
+          break;
+        }
+        steps.push({node:'A', edge:'e-D-A', vars:{Contador:counter, Total:total}, desc:'La pregunta fue verdadera: se corre una vuelta más.'});
+        counter++;
+        steps.push({node:'INC', edge:'e-A-INC', vars:{Contador:counter, Total:total}, desc:'El contador sube a '+counter+', y el camino vuelve a la pregunta antes de decidir si sigue.'});
+      }
+      return steps;
+    }
+  },
+
+  /* ---------- 4. MIENTRAS (while) ---------- */
+  {
+    id:'mientras', label:'MIENTRAS (energía)',
+    subtitleText:'Usa MIENTRAS cuando <b>no sabes de antemano</b> cuántas repeticiones habrá: depende de algo que solo se sabe mientras corre (aquí, la energía).',
+    viewBox:'0 0 500 500',
+    nodes:[
+      {id:'start', type:'pill', cx:250, cy:40, w:240, h:56, label:'Energía inicial lista'},
+      {id:'D', type:'diamond', cx:250, cy:150, hw:125, hh:55, label:'¿Queda energía?'},
+      {id:'A', type:'block', cx:250, cy:260, w:220, h:60, label:'Corre un tramo'},
+      {id:'INC', type:'block', cx:250, cy:350, w:220, h:56, label:'Energía − 10'},
+      {id:'end', type:'pill', cx:250, cy:460, w:240, h:56, label:'El atleta se detiene'}
+    ],
+    edges:[
+      {id:'e-start-D', d:'M250,68 L250,95'},
+      {id:'e-D-A', d:'M250,205 L250,230', label:'SÍ', lx:278, ly:218},
+      {id:'e-A-INC', d:'M250,290 L250,322'},
+      {id:'e-INC-D', d:'M360,350 C 460,350 460,150 375,150', label:'repite', lx:432, ly:250},
+      {id:'e-D-end', d:'M125,150 C 30,150 30,460 130,460', label:'NO', lx:55, ly:300}
+    ],
+    controlType:'stepper',
+    controlLabel:'Energía inicial',
+    min:10, max:50, step:10, defaultValue:30,
+    generateTrace(startEnergy){
+      const steps = [{node:'start', edge:null, vars:{Energía:startEnergy}, desc:'El atleta empieza con '+startEnergy+' de energía. No sabemos todavía cuántos tramos correrá: eso depende de cuándo se acabe.'}];
+      let energia=startEnergy, first=true;
+      while(true){
+        const cond = energia>0;
+        steps.push({node:'D', edge: first?'e-start-D':'e-INC-D', cond:{q:'¿Queda energía?', result:cond, detail:energia+' > 0'}, vars:{Energía:energia}, desc:'Se pregunta si '+energia+' > 0. Resultado: '+(cond?'VERDADERO':'FALSO')+'.'});
+        first=false;
+        if(!cond){
+          steps.push({node:'end', edge:'e-D-end', vars:{Energía:energia}, desc:'Como ya no queda energía, el ciclo termina aquí.'});
+          break;
+        }
+        steps.push({node:'A', edge:'e-D-A', vars:{Energía:energia}, desc:'Había energía: el atleta corre un tramo más.'});
+        energia -= 10;
+        steps.push({node:'INC', edge:'e-A-INC', vars:{Energía:energia}, desc:'Se gastan 10 de energía. Quedan '+energia+'. El camino vuelve a preguntar antes de decidir si sigue.'});
+      }
+      return steps;
+    }
+  },
+
+  /* ---------- 5. HAZ...MIENTRAS (do-while) ---------- */
+  {
+    id:'haz', label:'HAZ...MIENTRAS',
+    subtitleText:'Usa HAZ...MIENTRAS cuando el bloque de acción <b>debe ejecutarse sí o sí, al menos una vez</b>, y solo después se pregunta si hace falta repetir.',
+    viewBox:'0 0 500 460',
+    nodes:[
+      {id:'start', type:'pill', cx:250, cy:40, w:240, h:56, label:'Contador en 0'},
+      {id:'A', type:'block', cx:250, cy:140, w:220, h:60, label:'Intenta una vez (+1)'},
+      {id:'D', type:'diamond', cx:250, cy:260, hw:125, hh:55, label:'¿Faltan intentos?'},
+      {id:'end', type:'pill', cx:250, cy:380, w:240, h:56, label:'Intentos completados'}
+    ],
+    edges:[
+      {id:'e-start-A', d:'M250,68 L250,110'},
+      {id:'e-A-D', d:'M250,170 L250,205'},
+      {id:'e-D-A-loop', d:'M375,260 C 460,260 460,140 360,140', label:'SÍ, repite', lx:432, ly:200},
+      {id:'e-D-end', d:'M250,315 L250,352', label:'NO', lx:278, ly:335}
+    ],
+    controlType:'stepper',
+    controlLabel:'Intentos requeridos',
+    min:1, max:5, step:1, defaultValue:3,
+    generateTrace(required){
+      const steps = [{node:'start', edge:null, vars:{Intentos:0, Requeridos:required}, desc:'El contador de intentos empieza en 0. El bloque de acción va a ejecutarse aunque el contador ya cumpla la meta.'}];
+      let count=0, first=true;
+      while(true){
+        count++;
+        steps.push({node:'A', edge: first?'e-start-A':'e-D-A-loop', vars:{Intentos:count, Requeridos:required}, desc:'Se hace un intento SIN preguntar nada antes (a diferencia de MIENTRAS). Van '+count+' de '+required+'.'});
+        first=false;
+        const cond = count<required;
+        steps.push({node:'D', edge:'e-A-D', cond:{q:'¿Faltan intentos?', result:cond, detail:count+' < '+required}, vars:{Intentos:count, Requeridos:required}, desc:'Recién ahora, al final del bloque, se pregunta si faltan intentos: '+count+' < '+required+' → '+(cond?'VERDADERO':'FALSO')+'.'});
+        if(!cond){
+          steps.push({node:'end', edge:'e-D-end', vars:{Intentos:count, Requeridos:required}, desc:'Como ya no faltan intentos, el ciclo termina. Fíjate que el bloque se ejecutó como mínimo una vez, sin importar el valor inicial.'});
+          break;
+        }
+      }
+      return steps;
+    }
+  }
+];
+
+/* ================= Motor de estado y render ================= */
+
+let currentTab = 0;
+let currentStep = 0;
+let controlValue = null;
+let currentTrace = [];
+let playTimer = null;
+
+const el = {
+  tabs: document.getElementById('tabs'),
+  subtitle: document.getElementById('subtitle'),
+  diagramPanel: document.getElementById('diagramPanel'),
+  controlsBody: document.getElementById('controlsBody'),
+  varsTable: document.getElementById('varsTable'),
+  condCard: document.getElementById('condCard'),
+  condContent: document.getElementById('condContent'),
+  narrative: document.getElementById('narrative'),
+  stepCounter: document.getElementById('stepCounter'),
+  scrubber: document.getElementById('scrubber'),
+  prevBtn: document.getElementById('prevBtn'),
+  nextBtn: document.getElementById('nextBtn'),
+  playBtn: document.getElementById('playBtn'),
+  resetBtn: document.getElementById('resetBtn'),
+};
+
+function renderTabs(){
+  el.tabs.innerHTML = '';
+  TABS.forEach((tab,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i===currentTab?' active':'');
+    btn.textContent = tab.label;
+    btn.addEventListener('click', ()=> loadTab(i));
+    el.tabs.appendChild(btn);
+  });
+}
+
+function renderControls(tab){
+  el.controlsBody.innerHTML = '';
+  if(tab.controlType==='toggle'){
+    const row = document.createElement('div');
+    row.className='row';
+    row.innerHTML = `<span class="control-label">${tab.controlLabel}</span>`;
+    const group = document.createElement('div');
+    group.className='toggle-group';
+    const bTrue = document.createElement('button');
+    bTrue.className='toggle-btn sel-true' + (controlValue===true?' active':'');
+    bTrue.textContent='SÍ';
+    bTrue.addEventListener('click', ()=>{ setControlValue(true); });
+    const bFalse = document.createElement('button');
+    bFalse.className='toggle-btn sel-false' + (controlValue===false?' active':'');
+    bFalse.textContent='NO';
+    bFalse.addEventListener('click', ()=>{ setControlValue(false); });
+    group.appendChild(bTrue); group.appendChild(bFalse);
+    row.appendChild(group);
+    el.controlsBody.appendChild(row);
+  } else if(tab.controlType==='stepper'){
+    const row = document.createElement('div');
+    row.className='row';
+    row.innerHTML = `<span class="control-label">${tab.controlLabel}</span>`;
+    const stepper = document.createElement('div');
+    stepper.className='stepper';
+    const minus = document.createElement('button');
+    minus.textContent='−';
+    minus.addEventListener('click', ()=>{ setControlValue(Math.max(tab.min, controlValue-tab.step)); });
+    const val = document.createElement('span');
+    val.className='val';
+    val.textContent = controlValue;
+    const plus = document.createElement('button');
+    plus.textContent='+';
+    plus.addEventListener('click', ()=>{ setControlValue(Math.min(tab.max, controlValue+tab.step)); });
+    stepper.appendChild(minus); stepper.appendChild(val); stepper.appendChild(plus);
+    row.appendChild(stepper);
+    el.controlsBody.appendChild(row);
+  }
+}
+
+function setControlValue(v){
+  stopPlay();
+  controlValue = v;
+  currentStep = 0;
+  const tab = TABS[currentTab];
+  currentTrace = tab.generateTrace(controlValue);
+  renderControls(tab);
+  renderScrubber();
+  renderStep();
+}
+
+function loadTab(idx){
+  stopPlay();
+  currentTab = idx;
+  const tab = TABS[idx];
+  controlValue = tab.defaultValue;
+  currentStep = 0;
+  el.subtitle.innerHTML = tab.subtitleText;
+  renderTabs();
+  el.diagramPanel.innerHTML = buildSVG(tab.viewBox, tab.nodes, tab.edges);
+  renderControls(tab);
+  currentTrace = tab.generateTrace(controlValue);
+  renderScrubber();
+  renderStep();
+}
+
+function renderScrubber(){
+  el.scrubber.innerHTML = '';
+  currentTrace.forEach((s,i)=>{
+    const dot = document.createElement('button');
+    dot.className='dot';
+    dot.title='Paso '+(i+1);
+    dot.addEventListener('click', ()=>{ stopPlay(); currentStep=i; renderStep(); });
+    el.scrubber.appendChild(dot);
+  });
+}
+
+function renderVars(step, prevStep){
+  const keys = Object.keys(step.vars);
+  let html = '<tr><th>Elemento</th><th>Valor</th></tr>';
+  keys.forEach(k=>{
+    const val = step.vars[k];
+    const changed = !prevStep || !(k in prevStep.vars) || prevStep.vars[k]!==val;
+    html += `<tr class="${changed?'changed':''}"><td>${k}</td><td>${val}</td></tr>`;
+  });
+  el.varsTable.innerHTML = html;
+}
+
+function renderStep(){
+  const step = currentTrace[currentStep];
+  const prevStep = currentStep>0 ? currentTrace[currentStep-1] : null;
+
+  const visitedNodes = new Set();
+  const visitedEdges = new Set();
+  for(let i=0;i<currentStep;i++){
+    visitedNodes.add(currentTrace[i].node);
+    if(currentTrace[i].edge) visitedEdges.add(currentTrace[i].edge);
+  }
+
+  document.querySelectorAll('.node').forEach(n=>{
+    n.classList.remove('active','visited');
+    if(n.id===step.node) n.classList.add('active');
+    else if(visitedNodes.has(n.id)) n.classList.add('visited');
+  });
+
+  document.querySelectorAll('.edge').forEach(e=>{
+    e.classList.remove('active','visited');
+    const labelEl = document.getElementById(e.id+'-label');
+    if(labelEl) labelEl.classList.remove('active');
+    if(e.id===step.edge){ e.classList.add('active'); if(labelEl) labelEl.classList.add('active'); }
+    else if(visitedEdges.has(e.id)) e.classList.add('visited');
+  });
+
+  const targetNode = TABS[currentTab].nodes.find(n=>n.id===step.node);
+  const token = document.getElementById('token');
+  if(token && targetNode){ token.setAttribute('cx', targetNode.cx); token.setAttribute('cy', targetNode.cy); }
+
+  renderVars(step, prevStep);
+
+  if(step.cond){
+    el.condCard.hidden = false;
+    const cls = step.cond.result ? 'true' : 'false';
+    el.condContent.innerHTML =
+      `<div class="q">${step.cond.q}</div>` +
+      (step.cond.detail ? `<div class="detail">${step.cond.detail}</div>` : '') +
+      `<div class="arrow">↓</div>` +
+      `<div class="result ${cls}">${step.cond.result?'VERDADERO':'FALSO'}</div>`;
+  } else {
+    el.condCard.hidden = true;
+  }
+
+  el.narrative.textContent = step.desc;
+  el.stepCounter.textContent = 'Paso '+(currentStep+1)+' / '+currentTrace.length;
+  el.prevBtn.disabled = currentStep===0;
+  el.nextBtn.disabled = currentStep===currentTrace.length-1;
+
+  document.querySelectorAll('#scrubber .dot').forEach((d,i)=> d.classList.toggle('active', i===currentStep));
+}
+
+function next(){ if(currentStep<currentTrace.length-1){ currentStep++; renderStep(); } else { stopPlay(); } }
+function prev(){ if(currentStep>0){ currentStep--; renderStep(); } }
+function reset(){ stopPlay(); currentStep=0; renderStep(); }
+function togglePlay(){
+  if(playTimer){ stopPlay(); }
+  else{ el.playBtn.textContent='⏸ Pausar'; playTimer=setInterval(next, 1500); }
+}
+function stopPlay(){
+  if(playTimer){ clearInterval(playTimer); playTimer=null; el.playBtn.textContent='▶ Reproducir'; }
+}
+
+el.prevBtn.addEventListener('click', ()=>{ stopPlay(); prev(); });
+el.nextBtn.addEventListener('click', ()=>{ stopPlay(); next(); });
+el.resetBtn.addEventListener('click', reset);
+el.playBtn.addEventListener('click', togglePlay);
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowRight'){ stopPlay(); next(); }
+  if(e.key==='ArrowLeft'){ stopPlay(); prev(); }
+});
+
+loadTab(0);
+</script>
+</body>
+</html>

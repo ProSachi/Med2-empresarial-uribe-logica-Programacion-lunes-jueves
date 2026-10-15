@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Completo de Estructuras de Control</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-amber: #f59e0b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 { margin-bottom: 5px; font-size: 1.8rem; text-align: center; }
+        p.subtitle { color: var(--text-muted); margin-top: 0; margin-bottom: 20px; text-align: center; }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 950px;
+        }
+
+        .controls-panel {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; }
+
+        select, button {
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: #0f172a;
+            color: var(--text-color);
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        button.btn-primary {
+            background-color: var(--accent-blue);
+            border: none;
+            font-weight: bold;
+        }
+        button.btn-primary:hover { opacity: 0.9; }
+        button.btn-reset { background-color: transparent; border: 1px solid var(--border-color); }
+
+        .dynamic-input { display: flex; align-items: center; gap: 10px; }
+
+        /* Switch Toggle */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--accent-red); transition: .3s; border-radius: 26px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
+            background-color: white; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* Canvas */
+        .viewport {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            height: 480px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        svg { width: 100%; height: 100%; }
+
+        /* Flow SVG Styling */
+        .node { fill: #334155; stroke: var(--border-color); stroke-width: 2; }
+        .node-decision { fill: #1e1b4b; stroke: var(--accent-blue); stroke-width: 2; }
+        .node-accent { fill: #312e81; stroke: var(--accent-purple); stroke-width: 2; }
+        .node-text { fill: var(--text-color); font-size: 13px; font-weight: bold; text-anchor: middle; dominant-baseline: middle; }
+        
+        .path-line { stroke: var(--border-color); stroke-width: 4; fill: none; }
+        .path-active { stroke: var(--accent-blue); stroke-dasharray: 8; animation: dash 1s linear infinite; }
+
+        @keyframes dash { to { stroke-dashoffset: -16; } }
+
+        .token { fill: var(--accent-amber); transition: all 0.4s ease-in-out; }
+
+        .status-box {
+            background-color: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            color: #38bdf8;
+            min-height: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Simulador Completo de Estructuras de Control</h1>
+    <p class="subtitle">Visualiza la ruta del flujo de ejecución sin código</p>
+
+    <div class="container">
+        <!-- Panel de Control -->
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="structureSelect">Estructura a Simular:</label>
+                <select id="structureSelect" onchange="changeStructure()">
+                    <optgroup label="Condicionales (Desvíos)">
+                        <option value="if_else">If / Else</option>
+                        <option value="if_else_if" selected>If / Else If / Else (Filtro Secuencial)</option>
+                        <option value="switch">Switch (Múltiples Casos)</option>
+                    </optgroup>
+                    <optgroup label="Ciclos (Bucles)">
+                        <option value="while">While (Evalúa Antes)</option>
+                        <option value="do_while">Do-While (Evalúa Después)</option>
+                        <option value="for">For (Conteo Fijo)</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- Panel de Entrada Dinámico -->
+            <div class="control-group" id="inputContainer"></div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-primary" onclick="nextStep()">Siguiente Paso ▶</button>
+                <button class="btn-reset" onclick="resetSim()">Reiniciar ↺</button>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="viewport">
+            <svg id="svgCanvas"></svg>
+        </div>
+
+        <!-- Panel de Mensajes -->
+        <div class="status-box" id="statusBox">
+            Selecciona una estructura y presiona "Siguiente Paso ▶".
+        </div>
+    </div>
+
+    <script>
+        let currentStructure = 'if_else_if';
+        let currentStep = 0;
+
+        // Variables de estado
+        let condA = false;
+        let condB = false;
+        let switchOption = '1';
+        let forCount = 0;
+        let forLimit = 3;
+
+        function init() {
+            renderInputs();
+            resetSim();
+        }
+
+        function changeStructure() {
+            currentStructure = document.getElementById('structureSelect').value;
+            renderInputs();
+            resetSim();
+        }
+
+        function renderInputs() {
+            const container = document.getElementById('inputContainer');
+            container.innerHTML = '';
+
+            if (currentStructure === 'if_else') {
+                container.innerHTML = `
+                    <label>Condición:</label>
+                    <div class="dynamic-input">
+                        <span style="color:var(--accent-red); font-size:12px; font-weight:bold;">FALSO</span>
+                        <label class="switch"><input type="checkbox" id="toggleA" onchange="updateVars()"><span class="slider"></span></label>
+                        <span style="color:var(--accent-green); font-size:12px; font-weight:bold;">VERDADERO</span>
+                    </div>`;
+            } else if (currentStructure === 'if_else_if') {
+                container.innerHTML = `
+                    <label>Filtros Evaluados en Orden (Arriba a Abajo):</label>
+                    <div style="display:flex; gap:15px;">
+                        <div class="dynamic-input">
+                            <span style="font-size:12px;">1. Condición IF:</span>
+                            <label class="switch"><input type="checkbox" id="toggleA" onchange="updateVars()"><span class="slider"></span></label>
+                        </div>
+                        <div class="dynamic-input">
+                            <span style="font-size:12px;">2. Condición ELSE IF:</span>
+                            <label class="switch"><input type="checkbox" id="toggleB" onchange="updateVars()"><span class="slider"></span></label>
+                        </div>
+                    </div>`;
+            } else if (currentStructure === 'switch') {
+                container.innerHTML = `
+                    <label>Opción Seleccionada (Entrada):</label>
+                    <select id="switchSelect" onchange="updateVars()">
+                        <option value="1">Caso 1</option>
+                        <option value="2">Caso 2</option>
+                        <option value="3">Caso 3</option>
+                        <option value="def">Cualquier Otro (Default)</option>
+                    </select>`;
+            } else if (currentStructure === 'while' || currentStructure === 'do_while') {
+                container.innerHTML = `
+                    <label>Interruptor del Bucle (Condición):</label>
+                    <div class="dynamic-input">
+                        <span style="color:var(--accent-red); font-size:12px; font-weight:bold;">APAGADO</span>
+                        <label class="switch"><input type="checkbox" id="toggleA" onchange="updateVars()"><span class="slider"></span></label>
+                        <span style="color:var(--accent-green); font-size:12px; font-weight:bold;">ENCENDIDO</span>
+                    </div>`;
+            } else if (currentStructure === 'for') {
+                container.innerHTML = `
+                    <label>Límite de Vueltas (Meta del For):</label>
+                    <select id="forLimitSelect" onchange="updateVars()">
+                        <option value="2">2 Vueltas</option>
+                        <option value="3" selected>3 Vueltas</option>
+                        <option value="4">4 Vueltas</option>
+                    </select>`;
+            }
+        }
+
+        function updateVars() {
+            if (document.getElementById('toggleA')) condA = document.getElementById('toggleA').checked;
+            if (document.getElementById('toggleB')) condB = document.getElementById('toggleB').checked;
+            if (document.getElementById('switchSelect')) switchOption = document.getElementById('switchSelect').value;
+            if (document.getElementById('forLimitSelect')) forLimit = parseInt(document.getElementById('forLimitSelect').value);
+            resetSim();
+        }
+
+        function resetSim() {
+            currentStep = 0;
+            forCount = 0;
+            drawCanvas();
+            document.getElementById('statusBox').innerText = "Simulación lista. Haz clic en 'Siguiente Paso ▶'.";
+        }
+
+        function drawCanvas() {
+            const svg = document.getElementById('svgCanvas');
+            svg.innerHTML = '';
+
+            if (currentStructure === 'if_else') drawIfElse(svg);
+            else if (currentStructure === 'if_else_if') drawIfElseIf(svg);
+            else if (currentStructure === 'switch') drawSwitch(svg);
+            else if (currentStructure === 'while') drawWhile(svg);
+            else if (currentStructure === 'do_while') drawDoWhile(svg);
+            else if (currentStructure === 'for') drawFor(svg);
+
+            // Render Token
+            const pos = getTokenPos();
+            const token = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            token.setAttribute("cx", pos.x);
+            token.setAttribute("cy", pos.y);
+            token.setAttribute("r", "12");
+            token.setAttribute("class", "token");
+            svg.appendChild(token);
+        }
+
+        // --- DIBUJO DE ESTRUCTURAS ---
+
+        function drawIfElse(svg) {
+            createPath(svg, "M 475 40 L 475 120");
+            createPath(svg, "M 475 120 L 275 220 L 275 280 L 475 380", condA ? "path-active" : "");
+            createPath(svg, "M 475 120 L 675 220 L 675 280 L 475 380", !condA ? "path-active" : "");
+
+            createNode(svg, 475, 40, 120, 35, "Inicio", "node");
+            createNode(svg, 475, 120, 160, 50, "¿Es Verdadero?", "node-decision");
+            createNode(svg, 275, 250, 140, 50, "Camino SI (IF)", "node");
+            createNode(svg, 675, 250, 140, 50, "Camino NO (ELSE)", "node");
+            createNode(svg, 475, 380, 120, 35, "Fin Estructura", "node");
+        }
+
+        /* MODELO TOTALMENTE REPLANTEADO: CANAL DE FILTRADO VERTICAL CON SALIDAS A LA DERECHA Y BYPASS EXTERNO */
+        function drawIfElseIf(svg) {
+            // Canal Principal Vertical (Caída de la prueba)
+            createPath(svg, "M 300 30 L 300 110", currentStep === 1 ? "path-active" : ""); // De Inicio a Filtro 1
+            createPath(svg, "M 300 110 L 300 220", (!condA && currentStep >= 2) ? "path-active" : ""); // De Filtro 1 a Filtro 2 (Solo si FALSO)
+            createPath(svg, "M 300 220 L 300 330", (!condA && !condB && currentStep >= 3) ? "path-active" : ""); // De Filtro 2 a ELSE (Solo si ambos FALSOS)
+
+            // Salidas Horizontales a la derecha (Cuando una condición es VERDADERA)
+            createPath(svg, "M 300 110 L 520 110", (condA && currentStep >= 2) ? "path-active" : ""); // Filtro 1 -> Bloque 1
+            createPath(svg, "M 300 220 L 520 220", (!condA && condB && currentStep >= 3) ? "path-active" : ""); // Filtro 2 -> Bloque 2
+            createPath(svg, "M 300 330 L 520 330", (!condA && !condB && currentStep >= 3) ? "path-active" : ""); // Fondo -> Bloque 3 (ELSE)
+
+            // Gran Tubo Exterior de Escape (Colector Común a la Salida)
+            createPath(svg, "M 670 110 L 750 110 L 750 430 L 475 430", (condA && currentStep >= 3) ? "path-active" : "");
+            createPath(svg, "M 670 220 L 750 220", (!condA && condB && currentStep >= 4) ? "path-active" : "");
+            createPath(svg, "M 670 330 L 750 330", (!condA && !condB && currentStep >= 4) ? "path-active" : "");
+
+            // Salida limpia del ELSE
+            createPath(svg, "M 300 330 L 300 430 L 475 430", (!condA && !condB && currentStep === 4) ? "path-active" : "");
+
+            // Nodos del Flujo
+            createNode(svg, 300, 30, 120, 30, "Entrada Flujo", "node");
+
+            // Nivel 1: IF
+            createNode(svg, 300, 110, 180, 45, "1. ¿Filtro IF?", "node-decision");
+            createNode(svg, 595, 110, 150, 40, "Acción Bloque 1", "node");
+
+            // Nivel 2: ELSE IF
+            createNode(svg, 300, 220, 180, 45, "2. ¿Filtro ELSE IF?", "node-decision");
+            createNode(svg, 595, 220, 150, 40, "Acción Bloque 2", "node");
+
+            // Nivel 3: ELSE (Fondo)
+            createNode(svg, 300, 330, 180, 45, "3. Fondo (ELSE)", "node-accent");
+            createNode(svg, 595, 330, 150, 40, "Acción Por Defecto", "node");
+
+            // Fin
+            createNode(svg, 475, 430, 150, 35, "Fin Estructura", "node");
+        }
+
+        function drawSwitch(svg) {
+            createPath(svg, "M 475 40 L 475 120");
+            createPath(svg, "M 475 120 L 175 220 L 175 300 L 475 400", switchOption === '1' ? "path-active" : "");
+            createPath(svg, "M 475 120 L 375 220 L 375 300 L 475 400", switchOption === '2' ? "path-active" : "");
+            createPath(svg, "M 475 120 L 575 220 L 575 300 L 475 400", switchOption === '3' ? "path-active" : "");
+            createPath(svg, "M 475 120 L 775 220 L 775 300 L 475 400", switchOption === 'def' ? "path-active" : "");
+
+            createNode(svg, 475, 40, 100, 30, "Entrada", "node");
+            createNode(svg, 475, 120, 160, 50, "Evaluar Opción", "node-accent");
+
+            createNode(svg, 175, 260, 110, 45, "Caso 1", "node");
+            createNode(svg, 375, 260, 110, 45, "Caso 2", "node");
+            createNode(svg, 575, 260, 110, 45, "Caso 3", "node");
+            createNode(svg, 775, 260, 110, 45, "Default", "node");
+
+            createNode(svg, 475, 400, 120, 35, "Fin Switch", "node");
+        }
+
+        function drawWhile(svg) {
+            createPath(svg, "M 475 40 L 475 130");
+            createPath(svg, "M 475 130 L 475 260", condA ? "path-active" : "");
+            createPath(svg, "M 475 260 C 200 260, 200 130, 475 130", condA ? "path-active" : "");
+            createPath(svg, "M 475 130 L 720 130 L 720 380 L 475 380", !condA ? "path-active" : "");
+
+            createNode(svg, 475, 40, 100, 30, "Inicio", "node");
+            createNode(svg, 475, 130, 160, 50, "¿Es Verdadero?", "node-decision");
+            createNode(svg, 475, 260, 160, 45, "Ejecutar Acción", "node");
+            createNode(svg, 475, 380, 120, 35, "Salida Ciclo", "node");
+        }
+
+        function drawDoWhile(svg) {
+            createPath(svg, "M 475 40 L 475 130");
+            createPath(svg, "M 475 130 L 475 240");
+            createPath(svg, "M 475 240 C 200 240, 200 130, 475 130", condA ? "path-active" : "");
+            createPath(svg, "M 475 240 L 475 370", !condA ? "path-active" : "");
+
+            createNode(svg, 475, 40, 100, 30, "Inicio", "node");
+            createNode(svg, 475, 130, 180, 45, "1. Acción (Garantizada)", "node");
+            createNode(svg, 475, 240, 160, 50, "2. ¿Continuar?", "node-decision");
+            createNode(svg, 475, 370, 120, 35, "Salida Ciclo", "node");
+        }
+
+        function drawFor(svg) {
+            createPath(svg, "M 475 30 L 475 100");
+            createPath(svg, "M 475 100 L 475 180");
+            createPath(svg, "M 475 180 L 475 270", forCount < forLimit ? "path-active" : "");
+            createPath(svg, "M 475 270 C 180 270, 180 180, 475 180", forCount < forLimit ? "path-active" : "");
+            createPath(svg, "M 475 180 L 720 180 L 720 380 L 475 380", forCount >= forLimit ? "path-active" : "");
+
+            createNode(svg, 475, 30, 120, 30, "Inicio FOR", "node");
+            createNode(svg, 475, 100, 180, 40, "Contador = 0", "node-accent");
+            createNode(svg, 475, 180, 200, 45, `¿Contador < ${forLimit}?`, "node-decision");
+            createNode(svg, 475, 270, 180, 45, "Acción + Incrementar (+1)", "node");
+            createNode(svg, 475, 380, 120, 35, "Fin FOR", "node");
+        }
+
+        // --- HELPER SVG CREATION ---
+
+        function createNode(svg, cx, cy, w, h, text, className) {
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute("x", cx - w / 2);
+            rect.setAttribute("y", cy - h / 2);
+            rect.setAttribute("width", w);
+            rect.setAttribute("height", h);
+            rect.setAttribute("rx", "6");
+            rect.setAttribute("class", className);
+
+            const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            txt.setAttribute("x", cx);
+            txt.setAttribute("y", cy);
+            txt.setAttribute("class", "node-text");
+            txt.textContent = text;
+
+            svg.appendChild(rect);
+            svg.appendChild(txt);
+        }
+
+        function createPath(svg, d, extraClass = "") {
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", d);
+            path.setAttribute("class", "path-line " + extraClass);
+            svg.appendChild(path);
+        }
+
+        // --- CONTROL DE POSICIONES Y PASOS ---
+
+        function getTokenPos() {
+            if (currentStructure === 'if_else') {
+                if (currentStep === 0) return { x: 475, y: 40 };
+                if (currentStep === 1) return { x: 475, y: 120 };
+                if (currentStep === 2) return condA ? { x: 275, y: 250 } : { x: 675, y: 250 };
+                return { x: 475, y: 380 };
+            } 
+            else if (currentStructure === 'if_else_if') {
+                if (currentStep === 0) return { x: 300, y: 30 };
+                if (currentStep === 1) return { x: 300, y: 110 }; // Entra a evaluar Filtro 1 (IF)
+                if (currentStep === 2) {
+                    if (condA) return { x: 595, y: 110 }; // SÍ -> Sale a la derecha al Bloque 1
+                    return { x: 300, y: 220 }; // NO -> CAE VERTICALMENTE al Filtro 2 (ELSE IF)
+                }
+                if (currentStep === 3) {
+                    if (condA) return { x: 750, y: 270 }; // Va bajando por el canal de escape exterior
+                    if (condB) return { x: 595, y: 220 }; // SÍ -> Sale a la derecha al Bloque 2
+                    return { x: 595, y: 330 }; // NO -> Cae al Fondo (ELSE por defecto)
+                }
+                if (currentStep === 4) return { x: 475, y: 430 }; // Todos convergen en la salida final
+                return { x: 475, y: 430 };
+            }
+            else if (currentStructure === 'switch') {
+                if (currentStep === 0) return { x: 475, y: 40 };
+                if (currentStep === 1) return { x: 475, y: 120 };
+                if (currentStep === 2) {
+                    if (switchOption === '1') return { x: 175, y: 260 };
+                    if (switchOption === '2') return { x: 375, y: 260 };
+                    if (switchOption === '3') return { x: 575, y: 260 };
+                    return { x: 775, y: 260 };
+                }
+                return { x: 475, y: 400 };
+            }
+            else if (currentStructure === 'while') {
+                if (currentStep === 0) return { x: 475, y: 40 };
+                if (currentStep === 1) return { x: 475, y: 130 };
+                if (currentStep === 2) return condA ? { x: 475, y: 260 } : { x: 720, y: 250 };
+                if (currentStep === 3) return condA ? { x: 475, y: 130 } : { x: 475, y: 380 };
+                return { x: 475, y: 380 };
+            }
+            else if (currentStructure === 'do_while') {
+                if (currentStep === 0) return { x: 475, y: 40 };
+                if (currentStep === 1) return { x: 475, y: 130 };
+                if (currentStep === 2) return { x: 475, y: 240 };
+                if (currentStep === 3) return condA ? { x: 475, y: 130 } : { x: 475, y: 370 };
+                return { x: 475, y: 370 };
+            }
+            else if (currentStructure === 'for') {
+                if (currentStep === 0) return { x: 475, y: 30 };
+                if (currentStep === 1) return { x: 475, y: 100 };
+                if (currentStep === 2) return { x: 475, y: 180 };
+                if (currentStep === 3) return (forCount < forLimit) ? { x: 475, y: 270 } : { x: 720, y: 270 };
+                if (currentStep === 4) return (forCount < forLimit) ? { x: 475, y: 180 } : { x: 475, y: 380 };
+                return { x: 475, y: 380 };
+            }
+            return { x: 475, y: 40 };
+        }
+
+        function nextStep() {
+            const statusBox = document.getElementById('statusBox');
+
+            if (currentStructure === 'if_else') {
+                if (currentStep < 3) currentStep++; else currentStep = 0;
+                if (currentStep === 1) statusBox.innerText = "Evaluando condición...";
+                if (currentStep === 2) statusBox.innerText = condA ? "VERDADERO: Va por el bloque IF." : "FALSO: Va por el bloque ELSE.";
+                if (currentStep === 3) statusBox.innerText = "Fin de la estructura. Continúa el flujo.";
+            }
+            else if (currentStructure === 'if_else_if') {
+                if (currentStep < 4) currentStep++; else currentStep = 0;
+                if (currentStep === 1) statusBox.innerText = "1. Probando el Primer Filtro (IF)...";
+                if (currentStep === 2) {
+                    statusBox.innerText = condA 
+                        ? "¡VERDADERO! Se abre la puerta derecha -> Ejecuta Bloque 1 y ESCAPA de la estructura." 
+                        : "FALSO. La puerta derecha sigue cerrada. El flujo CAE al segundo filtro (ELSE IF).";
+                }
+                if (currentStep === 3) {
+                    if (condA) statusBox.innerText = "El flujo va bajando por el canal exterior directo al final...";
+                    else if (condB) statusBox.innerText = "¡VERDADERO! Se abre la segunda puerta -> Ejecuta Bloque 2 y ESCAPA.";
+                    else statusBox.innerText = "FALSO. El flujo cayó hasta el fondo (ELSE) -> Se ejecuta la Acción Por Defecto.";
+                }
+                if (currentStep === 4) statusBox.innerText = "Fin de la estructura. Todos los caminos se reúnen aquí abajo.";
+            }
+            else if (currentStructure === 'switch') {
+                if (currentStep < 3) currentStep++; else currentStep = 0;
+                if (currentStep === 1) statusBox.innerText = "Leyendo valor de entrada para buscar coincidencia...";
+                if (currentStep === 2) statusBox.innerText = `Coincidencia encontrada -> Saltando al ${switchOption === 'def' ? 'caso por defecto (DEFAULT)' : 'CASO ' + switchOption}.`;
+                if (currentStep === 3) statusBox.innerText = "Ejecutó el caso y salió del Switch.";
+            }
+            else if (currentStructure === 'while') {
+                if (currentStep < 3) currentStep++;
+                else currentStep = condA ? 1 : 0;
+
+                if (currentStep === 1) statusBox.innerText = "WHILE: Comprobando condición ANTES de entrar...";
+                if (currentStep === 2) statusBox.innerText = condA ? "VERDADERO -> Ejecuta la acción del bucle." : "FALSO -> Salta por completo el bucle.";
+                if (currentStep === 3) statusBox.innerText = condA ? "¡REBOTE! Regresa arriba para volver a comprobar la condición." : "Salió del bucle.";
+            }
+            else if (currentStructure === 'do_while') {
+                if (currentStep < 3) currentStep++;
+                else currentStep = condA ? 1 : 0;
+
+                if (currentStep === 1) statusBox.innerText = "DO-WHILE: ¡Ejecuta la acción PRIMERO sin preguntar!";
+                if (currentStep === 2) statusBox.innerText = "Ahora comprueba la condición abajo...";
+                if (currentStep === 3) statusBox.innerText = condA ? "VERDADERO -> ¡REBOTE! Sube a repetir la acción." : "FALSO -> Se termina el bucle.";
+            }
+            else if (currentStructure === 'for') {
+                if (currentStep < 4) currentStep++;
+                else {
+                    if (forCount < forLimit) {
+                        forCount++;
+                        currentStep = 2;
+                    } else {
+                        currentStep = 0;
+                    }
+                }
+
+                if (currentStep === 1) statusBox.innerText = "FOR: Se crea e inicializa el contador en 0.";
+                if (currentStep === 2) statusBox.innerText = `FOR: ¿Contador (${forCount}) < Límite (${forLimit})?`;
+                if (currentStep === 3) {
+                    if (forCount < forLimit) statusBox.innerText = `Ejecuta acción e incrementa el contador a ${forCount + 1}.`;
+                    else statusBox.innerText = `Contador llegó al límite (${forLimit}). Se rompe el ciclo.`;
+                }
+                if (currentStep === 4) {
+                    if (forCount < forLimit) statusBox.innerText = "¡REBOTE! Regresa a verificar la condición con el contador incrementado.";
+                    else statusBox.innerText = "Salida del ciclo FOR.";
+                }
+            }
+
+            drawCanvas();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
