@@ -3,78 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MotoMarket | Venta de Motos</title>
-  <meta name="description" content="Encuentra la moto ideal para ciudad, aventura o trabajo al mejor precio.">
+  <title>Mercado Fresco | Alimentos de calidad</title>
+  <meta name="description" content="Compra frutas, verduras y productos frescos seleccionados para tu hogar.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="hero">
-    <nav class="nav">
-      <h1 class="logo">Moto<span>Market</span></h1>
-      <a href="#catalogo" class="btn btn-small">Ver catálogo</a>
+  <header class="hero" id="inicio">
+    <nav class="nav" aria-label="Navegación principal">
+      <h1 class="logo">Mercado<span>Fresco</span></h1>
+      <div class="nav-links">
+        <a href="#beneficios">Nosotros</a>
+        <a href="#catalogo">Productos</a>
+        <a href="#contacto">Contacto</a>
+      </div>
     </nav>
     <section class="hero-content">
-      <p class="tag">Tu próxima moto te está esperando</p>
-      <h2>Compra motos nuevas y seminuevas con garantía</h2>
-      <p>Financiación, entrega rápida y asesoría personalizada para que ruedes hoy mismo.</p>
-      <a href="#contacto" class="btn">Cotizar ahora</a>
+      <p class="tag">Frescura que se nota</p>
+      <h2>Alimentos frescos para disfrutar cada día</h2>
+      <p>Encuentra frutas, verduras y productos seleccionados directamente para tu mesa.</p>
+      <a href="#catalogo" class="btn">Explorar productos</a>
     </section>
   </header>
 
   <main>
-    <section class="benefits">
+    <section class="benefits" id="beneficios" aria-label="Beneficios de Mercado Fresco">
       <article>
-        <h3>Financiación flexible</h3>
-        <p>Paga en cuotas cómodas y ajustadas a tu presupuesto.</p>
+        <h3>Siempre frescos</h3>
+        <p>Seleccionamos productos frescos y de calidad para tu hogar.</p>
       </article>
       <article>
-        <h3>Garantía incluida</h3>
-        <p>Compra con respaldo y soporte técnico postventa.</p>
+        <h3>Del campo a tu mesa</h3>
+        <p>Apoyamos a productores locales y sus cosechas de temporada.</p>
       </article>
       <article>
-        <h3>Entrega inmediata</h3>
-        <p>Tenemos inventario listo para entrega en tiempo récord.</p>
+        <h3>Compra fácil</h3>
+        <p>Explora el catálogo y cuéntanos qué necesitas.</p>
       </article>
     </section>
 
     <section id="catalogo" class="catalog">
       <div class="section-title">
-        <h2>Catálogo de motos</h2>
-        <p>Filtra por categoría y encuentra la ideal para ti.</p>
+        <h2>Productos destacados</h2>
+        <p>Explora nuestras categorías y elige tus favoritos.</p>
       </div>
 
       <div class="filters">
-        <button class="filter-btn active" data-filter="todas">Todas</button>
-        <button class="filter-btn" data-filter="deportiva">Deportivas</button>
-        <button class="filter-btn" data-filter="urbana">Urbanas</button>
-        <button class="filter-btn" data-filter="adventure">Adventure</button>
+        <button class="filter-btn active" data-filter="todas" aria-pressed="true">Todos</button>
+        <button class="filter-btn" data-filter="frutas" aria-pressed="false">Frutas</button>
+        <button class="filter-btn" data-filter="verduras" aria-pressed="false">Verduras</button>
+        <button class="filter-btn" data-filter="despensa" aria-pressed="false">Despensa</button>
       </div>
 
       <div class="cards">
-        <article class="card" data-category="deportiva">
-          <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80" alt="Moto deportiva roja">
+        <article class="card" data-category="frutas">
+          <img src="https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=900&q=80" alt="Variedad de frutas frescas">
           <div class="card-body">
-            <h3>Raptor 300R</h3>
-            <p>Motor 300cc, 6 velocidades, ideal para alto rendimiento.</p>
-            <strong>$18.900.000 COP</strong>
+            <h3>Frutas de temporada</h3>
+            <p>Selección de frutas frescas y dulces, ideal para compartir.</p>
+            <strong>Desde $8.900 COP / kg</strong>
           </div>
         </article>
 
-        <article class="card" data-category="urbana">
-          <img src="https://images.unsplash.com/photo-1511994298241-608e28f14fde?auto=format&fit=crop&w=900&q=80" alt="Moto urbana negra">
+        <article class="card" data-category="verduras">
+          <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=900&q=80" alt="Verduras frescas para ensalada">
           <div class="card-body">
-            <h3>CityGo 160</h3>
-            <p>Ágil, económica y perfecta para moverte por la ciudad.</p>
-            <strong>$10.500.000 COP</strong>
+            <h3>Verduras frescas</h3>
+            <p>Ingredientes frescos para tus ensaladas y recetas favoritas.</p>
+            <strong>Desde $4.500 COP / unidad</strong>
           </div>
         </article>
 
-        <article class="card" data-category="adventure">
-          <img src="https://images.unsplash.com/photo-1524592714635-d77511a4834b?auto=format&fit=crop&w=900&q=80" alt="Moto adventure en carretera">
+        <article class="card" data-category="despensa">
+          <img src="https://images.unsplash.com/photo-1604719312566-8912e9c8a213?auto=format&fit=crop&w=900&q=80" alt="Productos variados de despensa">
           <div class="card-body">
-            <h3>TrailX 400</h3>
-            <p>Suspensión reforzada y autonomía amplia para viaje.</p>
-            <strong>$22.300.000 COP</strong>
+            <h3>Esenciales de despensa</h3>
+            <p>Productos básicos para tener siempre a mano en tu cocina.</p>
+            <strong>Desde $3.900 COP</strong>
           </div>
         </article>
       </div>
@@ -82,8 +86,8 @@
 
     <section id="contacto" class="contact">
       <div class="section-title">
-        <h2>Solicita tu cotización</h2>
-        <p>Déjanos tus datos y te contactamos en minutos.</p>
+        <h2>Cuéntanos qué necesitas</h2>
+        <p>Déjanos tus datos y te ayudamos a preparar tu pedido.</p>
       </div>
 
       <form id="quoteForm" class="form">
@@ -93,25 +97,25 @@
         <label for="phone">Teléfono</label>
         <input id="phone" name="phone" type="tel" placeholder="Ej: 3001234567" required>
 
-        <label for="model">Modelo de interés</label>
+        <label for="model">Producto de interés</label>
         <select id="model" name="model" required>
-          <option value="">Selecciona un modelo</option>
-          <option value="Raptor 300R">Raptor 300R</option>
-          <option value="CityGo 160">CityGo 160</option>
-          <option value="TrailX 400">TrailX 400</option>
+          <option value="">Selecciona un producto</option>
+          <option value="Frutas de temporada">Frutas de temporada</option>
+          <option value="Verduras frescas">Verduras frescas</option>
+          <option value="Esenciales de despensa">Esenciales de despensa</option>
         </select>
 
-        <label for="message">Mensaje</label>
-        <textarea id="message" name="message" rows="4" placeholder="Cuéntanos qué buscas"></textarea>
+        <label for="message">Detalles del pedido</label>
+        <textarea id="message" name="message" rows="4" placeholder="Cuéntanos qué productos buscas"></textarea>
 
-        <button type="submit" class="btn">Enviar solicitud</button>
+        <button type="submit" class="btn">Enviar pedido</button>
       </form>
       <p id="formMessage" class="form-message" aria-live="polite"></p>
     </section>
   </main>
 
   <footer class="footer">
-    <p>© 2026 MotoMarket. Todos los derechos reservados.</p>
+    <p>© 2026 Mercado Fresco. Alimentos frescos para tu mesa.</p>
   </footer>
 
   <script src="script.js"></script>
