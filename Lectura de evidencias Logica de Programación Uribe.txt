@@ -1,0 +1,25 @@
+# Guía de Lectura y Revisión de Evidencias
+
+Este documento proporciona las instrucciones necesarias para interpretar y acceder a las evidencias construidas y entregadas por el docente a los estudiantes a medida que se avanzaba en cada una de las clases.
+
+Repositorio de evidencias
+https://github.com/ProSachi/Med2-empresarial-uribe-logica-Programacion-lunes-jueves.git
+
+
+Cómo acceder y revisar los repositorios de código (Git)
+
+Los repositorios de Git son plataformas donde los desarrolladores guardan su código. **No es necesario tener conocimientos de programación, ni usar la consola de comandos, ni instalar Git para revisar estos entregables.**
+
+Para visualizar las evidencias, siga estos pasos directamente desde su navegador web:
+
+### Opción A: Visualización directa en el navegador web
+1. **Abrir el enlace:** Haga clic en el enlace del repositorio indicado en la parte superior.
+2. **Navegar los archivos:** Se abrirá una página web que muestra una lista de carpetas y archivos (similar al explorador de archivos de Windows o Mac). 
+3. **Leer el código o texto:** Puede hacer clic en cualquier archivo (por ejemplo, archivos con terminación `.txt`, `.md`, `.java`, `.py`, `.js`, etc.) y la plataforma mostrará el texto o código escrito por el docente directamente en la pantalla.
+
+### Opción B: Descargar el proyecto completo (Recomendada para revisiones exhaustivas)
+Si requiere tener los archivos en su computadora para abrirlos localmente:
+1. **Abrir el enlace:** Haga clic en el enlace del repositorio.
+2. **Buscar el botón de descarga:** 
+   - En GitHub: Busque un botón verde en la parte superior derecha de la lista de archivos que dice **"<> Code"**. Al hacer clic, se desplegará un menú; seleccione la opción **"Download ZIP"**.
+3. **Descomprimir:** El proyecto se descargará como un archivo comprimido (`.zip`). Haga clic derecho sobre él en su computadora, seleccione "Extraer aquí" o "Descomprimir", y podrá ver todas las carpetas y archivos como cualquier otro documento en su PC.
